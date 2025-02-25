@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import Versions from './components/Versions.vue'
+import { ref } from 'vue'
+import Printers from './components/Printers.vue'
 
-const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+const drawer = ref(true)
+const selectedTab = ref('printers')
 </script>
 
 <template>
-  <Versions/>
+    <Printers></Printers>
 </template>
