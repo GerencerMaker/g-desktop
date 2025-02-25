@@ -34,17 +34,12 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
-  // IPC para listar impressoras
   ipcMain.handle('list-printers', async () => {
     return await getPrinters()
   })
