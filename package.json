@@ -23,8 +23,11 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
+    "@mdi/font": "^7.4.47",
+    "axios": "^1.7.9",
     "electron-updater": "^6.3.9",
     "vite-plugin-vuetify": "^2.1.0",
+    "vue-router": "^4.5.0",
     "vuetify": "^3.7.14"
   },
   "devDependencies": {
