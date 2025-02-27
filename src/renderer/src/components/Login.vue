@@ -15,25 +15,65 @@
         </v-card>
       </v-col>
     </v-row>
+    <v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="timeout">
+      {{ snackbarMessage }}
+      <template #action="{ attrs }">
+        <v-btn text v-bind="attrs" @click="snackbar = false">Fechar</v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 
 <script>
+import axios from 'axios'
+import enviroments from '../../enviroments'
 import { defineComponent, ref } from 'vue'
 
 export default defineComponent({
   setup() {
     const email = ref('')
     const password = ref('')
+    const snackbar = ref(false)
+    const snackbarMessage = ref('')
+    const snackbarColor = ref('error') // Cor da snackbar (pode ser 'error', 'success', etc.)
+    const timeout = ref(2000)
 
     return {
       email,
-      password
+      password,
+      snackbar,
+      snackbarMessage,
+      snackbarColor,
+      timeout
     }
   },
   methods: {
-    handleLogin() {
-      alert(`Usuário: ${this.email}\nSenha: ${this.password}`)
+    async handleLogin() {
+      try {
+        const response = await axios.post(`${enviroments.API}/auth/login`, {
+          email: this.email,
+          password: this.password
+        })
+
+        if (response.status !== 200) {
+          this.snackbarMessage = 'Usuário ou senha inválidos'
+          this.snackbarColor = 'error'
+          this.snackbar = true
+          return
+        }
+
+        localStorage.setItem('token', response.data.token)
+        localStorage.setItem('user', JSON.stringify(response.data.user))
+        this.$router.push('/home')
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          this.snackbarMessage = 'Usuário ou senha inválidos'
+        } else {
+          this.snackbarMessage = 'Erro ao realizar login. Tente novamente.'
+        }
+        this.snackbarColor = 'error'
+        this.snackbar = true
+      }
     }
   }
 })
