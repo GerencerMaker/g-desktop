@@ -3,12 +3,19 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { getPrinters } from './printers' // Importa a função para obter impressoras
 
+let mainWindow: BrowserWindow | null = null
+
 function createWindow(): void {
-  const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+  mainWindow = new BrowserWindow({
+    width: 400,
+    height: 600,
     show: false,
     autoHideMenuBar: true,
+    frame: false,
+    transparent: false,
+    resizable: false,
+    maximizable: false, // Impede maximização
+    fullscreenable: false, // Impede tela cheia
     ...(process.platform === 'linux' ? {} : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -16,8 +23,11 @@ function createWindow(): void {
     }
   })
 
+  // Remove o menu completamente
+  mainWindow.setMenu(null)
+
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow?.show()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -32,6 +42,28 @@ function createWindow(): void {
   }
 }
 
+// Função para redimensionar a janela após o login
+function resizeToMainWindow(): void {
+  if (mainWindow) {
+    mainWindow.setSize(900, 670, true)
+    mainWindow.setResizable(true)
+    mainWindow.setMaximizable(true) // Permite maximização após login
+    mainWindow.setFullScreenable(true) // Permite tela cheia após login
+    mainWindow.center()
+  }
+}
+
+// Função para voltar ao modo de login
+function resizeToLoginWindow(): void {
+  if (mainWindow) {
+    mainWindow.setSize(400, 600, true)
+    mainWindow.setResizable(false)
+    mainWindow.setMaximizable(false)
+    mainWindow.setFullScreenable(false)
+    mainWindow.center()
+  }
+}
+
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.electron')
 
@@ -41,6 +73,16 @@ app.whenReady().then(() => {
 
   ipcMain.handle('list-printers', async () => {
     return await getPrinters()
+  })
+
+  // Handler para redimensionar a janela após login
+  ipcMain.handle('resize-window', () => {
+    resizeToMainWindow()
+  })
+
+  // Handler para voltar ao modo de login
+  ipcMain.handle('resize-to-login', () => {
+    resizeToLoginWindow()
   })
 
   createWindow()

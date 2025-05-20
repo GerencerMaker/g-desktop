@@ -1,20 +1,35 @@
 <script>
-import { defineComponent } from 'vue'
+import { defineComponent, computed } from 'vue'
+import { useRoute } from 'vue-router'
 
 export default defineComponent({
   components: {},
   props: {},
-  data() {
+  setup() {
+    const route = useRoute()
+    
+    const currentLayout = computed(() => {
+      return route.path === '/login' ? 'div' : 'v-app'
+    })
+
     return {
-      drawer: false,
-      group: 0
+      currentLayout
     }
   }
 })
 </script>
 
 <template>
-  <v-app>
+  <component :is="currentLayout">
     <router-view></router-view>
-  </v-app>
+  </component>
 </template>
+
+<style>
+/* Estilos globais para garantir que o login ocupe toda a tela */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+</style>

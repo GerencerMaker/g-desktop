@@ -1,49 +1,55 @@
 <script>
-import { defineComponent, reactive, ref } from 'vue'
+import { defineComponent, ref } from 'vue'
 import axios from 'axios'
 
 export default defineComponent({
   name: 'PrinterSelection',
   data() {
     return {
-      systemPrinters: reactive([]),
-      selectedPrinters: ref([])
+      systemPrinters: [],
+      selectedPrinter: ref(null)
     }
   },
   mounted() {
-    this.listPrinters()
+    this.getPrinter();
+    this.listPrinters();
   },
+  //
   methods: {
+    async getPrinter() {
+      await axios.get('/api/printer', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+    },
+
     async listPrinters() {
       try {
         const printerList = await window.electron.ipcRenderer.invoke('list-printers')
-        this.systemPrinters.splice(
-          0,
-          this.systemPrinters.length,
-          ...printerList.map((p) => ({
-            id: p.options['printer-uri-supported'],
-            name: p.name,
-            ip: p.options['printer-uri-supported'],
-            status: p.status,
-            default: p.options['printer-uri-supported'] === 'ipp://localhost/printers/IMPRESSORA'
-          }))
-        )
+        this.systemPrinters = printerList.map((p) => ({
+          id: p.options['printer-uri-supported'],
+          name: p.name,
+          ip: p.options['printer-uri-supported'],
+          status: p.status,
+          default: p.options['printer-uri-supported'] === 'ipp://localhost/printers/IMPRESSORA'
+        }))
       } catch (error) {
         console.error('Erro ao listar impressoras:', error)
       }
     },
     async submitPrinters() {
-      if (this.selectedPrinters.length === 0) {
-        alert('Selecione pelo menos uma impressora!')
+      if (!this.selectedPrinter) {
+        alert('Selecione uma impressora!')
         return
       }
 
       try {
-        await axios.post('/api/select-printers', { printerIds: this.selectedPrinters })
-        alert('Impressoras selecionadas com sucesso!')
+        await axios.post('/api/select-printers', { printerIds: [this.selectedPrinter] })
+        alert('Impressora selecionada com sucesso!')
       } catch (error) {
-        console.error('Erro ao enviar as impressoras:', error)
-        alert('Erro ao selecionar as impressoras.')
+        console.error('Erro ao enviar a impressora:', error)
+        alert('Erro ao selecionar a impressora.')
       }
     }
   }
@@ -51,42 +57,75 @@ export default defineComponent({
 </script>
 
 <template>
-  <v-container>
-    <v-container v-for="systemPrinter in systemPrinters" :key="systemPrinter.id">
-      <v-card class="pa-3 mb-2">
-        <v-row>
-          <v-col>
-            <h2>{{ systemPrinter.name }}</h2>
-            <ul>
-              <li>Status: {{ systemPrinter.status }}</li>
-              <li>IP: {{ systemPrinter.ip }}</li>
-              <li v-if="systemPrinter.default">Padrão</li>
-            </ul>
+  <v-container class="py-6 px-4" fluid>
+    <h1 class="text-h5 text-center font-weight-medium mb-8">Seleção de Impressora</h1>
+    <v-radio-group v-model="selectedPrinter" column class="max-width-800 mx-auto">
+      <v-card
+        v-for="systemPrinter in systemPrinters"
+        :key="systemPrinter.id"
+        class="mb-3 rounded-lg"
+        variant="outlined"
+        :class="{ 'selected-printer': selectedPrinter === systemPrinter.id }"
+      >
+        <v-row align="center" class="pa-4">
+          <v-col cols="10">
+            <div class="text-subtitle-1 font-weight-medium mb-1">
+              {{ systemPrinter.name }}
+            </div>
+            <div class="text-body-2 text-medium-emphasis">
+              <div class="d-flex align-center mb-1">
+                <v-icon size="small" class="mr-1" :color="systemPrinter.status === 'idle' ? 'success' : 'warning'">
+                  {{ systemPrinter.status === 'idle' ? 'mdi-check-circle' : 'mdi-alert-circle' }}
+                </v-icon>
+                {{ systemPrinter.status === 'idle' ? 'Disponível' : 'Ocupada' }}
+              </div>
+              <div class="d-flex align-center">
+                <v-icon size="small" class="mr-1">mdi-printer-3d</v-icon>
+                {{ systemPrinter.ip }}
+              </div>
+              <v-chip
+                v-if="systemPrinter.default"
+                size="small"
+                color="primary"
+                class="mt-2"
+                variant="outlined"
+              >
+                Padrão
+              </v-chip>
+            </div>
           </v-col>
-          <v-col class="d-flex align-end justify-end">
-            <v-checkbox
-              v-model="selectedPrinters"
-              :value="systemPrinter.id"
-              class="mt-0"
-            ></v-checkbox>
+          <v-col cols="2" class="d-flex justify-center">
+            <v-radio :value="systemPrinter.id" color="primary"></v-radio>
           </v-col>
         </v-row>
       </v-card>
-    </v-container>
+    </v-radio-group>
 
-    <v-btn color="primary" @click="submitPrinters">Confirmar Seleção</v-btn>
+    <div class="text-center mt-8">
+      <v-btn
+        color="primary"
+        size="large"
+        @click="submitPrinters"
+        :disabled="!selectedPrinter"
+        class="text-none px-8"
+      >
+        Confirmar Seleção
+      </v-btn>
+    </div>
   </v-container>
 </template>
 
 <style scoped>
-h2 {
-  color: #333;
+.max-width-800 {
+  max-width: 800px;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+
+.selected-printer {
+  border-color: rgb(var(--v-theme-primary)) !important;
+  background-color: rgb(var(--v-theme-primary-lighten-5));
 }
-li {
-  margin: 5px 0;
+
+.text-medium-emphasis {
+  color: rgba(0, 0, 0, 0.6);
 }
 </style>
