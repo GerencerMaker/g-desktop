@@ -1,6 +1,7 @@
 <script>
 import { defineComponent, ref } from 'vue'
 import axios from 'axios'
+import enviroments from '../../enviroments'
 
 export default defineComponent({
   name: 'PrinterSelection',
@@ -14,15 +15,24 @@ export default defineComponent({
     this.getPrinter();
     this.listPrinters();
   },
-  //
+
   methods: {
     async getPrinter() {
-      await axios.get('/api/printer', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+      try {
+        const response = await axios.get(`${enviroments.API}/printer`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const backendPrinter = response.data.data;
+        if (backendPrinter && backendPrinter.ip) {
+          this.selectedPrinter = backendPrinter.ip;
         }
-      });
+      } catch (error) {
+        console.error('Erro ao buscar a impressora configurada:', error);
+      }
     },
+
 
     async listPrinters() {
       try {
@@ -44,8 +54,24 @@ export default defineComponent({
         return
       }
 
+      const printer = this.systemPrinters.find(
+        (p) => p.id === this.selectedPrinter
+      )
+      if (!printer) {
+        alert('Impressora não encontrada!')
+        return
+      }
+
       try {
-        await axios.post('/api/select-printers', { printerIds: [this.selectedPrinter] })
+        await axios.post(`${enviroments.API}/printer`, {
+          ip: printer.ip,
+          name: printer.name,
+          system_driverinfo: printer.id
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        })
         alert('Impressora selecionada com sucesso!')
       } catch (error) {
         console.error('Erro ao enviar a impressora:', error)
@@ -73,12 +99,6 @@ export default defineComponent({
               {{ systemPrinter.name }}
             </div>
             <div class="text-body-2 text-medium-emphasis">
-              <div class="d-flex align-center mb-1">
-                <v-icon size="small" class="mr-1" :color="systemPrinter.status === 'idle' ? 'success' : 'warning'">
-                  {{ systemPrinter.status === 'idle' ? 'mdi-check-circle' : 'mdi-alert-circle' }}
-                </v-icon>
-                {{ systemPrinter.status === 'idle' ? 'Disponível' : 'Ocupada' }}
-              </div>
               <div class="d-flex align-center">
                 <v-icon size="small" class="mr-1">mdi-printer-3d</v-icon>
                 {{ systemPrinter.ip }}
@@ -91,6 +111,15 @@ export default defineComponent({
                 variant="outlined"
               >
                 Padrão
+              </v-chip>
+                            <v-chip
+                v-if="selectedPrinter === systemPrinter.id"
+                size="small"
+                color="primary"
+                class="mt-2"
+                variant="outlined"
+              >
+                Selecionada
               </v-chip>
             </div>
           </v-col>
