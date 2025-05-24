@@ -27,9 +27,18 @@ export default defineComponent({
 
 <style>
 /* Estilos globais para garantir que o login ocupe toda a tela */
-html, body {
+html, body, #app {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  height: 100%;
+  width: 100%;
+  background-color: #fafafa;
+}
+
+#app {
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 </style>

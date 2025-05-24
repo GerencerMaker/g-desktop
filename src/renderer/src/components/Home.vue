@@ -18,22 +18,25 @@ export default defineComponent({
   },
   methods: {
     async handleLogout() {
-      // Limpa os dados de autenticação
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      
-      // Limpa os cookies se existirem
+
       document.cookie.split(';').forEach(cookie => {
         const [name] = cookie.trim().split('=')
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
       })
 
-      // Redimensiona a janela para o modo de login
       await window.electron.ipcRenderer.invoke('resize-to-login')
-
-      // Redireciona para a tela de login
       this.$router.push('/login')
+    },
+    // Changed the name from resizeWidth to reflect its purpose: resizing to main window
+    async resizeToMainWindow() { // Renamed for clarity
+      await window.electron.ipcRenderer.invoke('resize-window') // Call the 'resize-window' handler
     }
+  },
+  mounted() {
+    // Call the method to resize the window when the component is mounted
+    this.resizeToMainWindow()
   }
 })
 </script>

@@ -101,9 +101,6 @@ export default defineComponent({
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('user', JSON.stringify(response.data.user))
         
-        // Redimensiona a janela antes de navegar
-        await window.electron.ipcRenderer.invoke('resize-window')
-        
         this.$router.push('/home')
       } catch (error) {
         if (error.response && error.response?.status === 401) {
