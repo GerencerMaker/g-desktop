@@ -6,5 +6,5 @@ export async function getPrinters() {
     const printers = await window.webContents.getPrintersAsync()
     return printers
   }
-  return []
+  return [];
 }

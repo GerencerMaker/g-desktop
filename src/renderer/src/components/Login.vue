@@ -7,30 +7,11 @@
             <v-card-title class="text-h5 text-center mb-6">Login</v-card-title>
             <v-card-text>
               <v-form @submit.prevent="handleLogin">
-                <v-text-field
-                  v-model="email"
-                  label="Email"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-4"
-                  required
-                ></v-text-field>
-                <v-text-field
-                  v-model="password"
-                  label="Senha"
-                  type="password"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-6"
-                  required
-                ></v-text-field>
-                <v-btn
-                  block
-                  color="primary"
-                  type="submit"
-                  size="large"
-                  class="text-none"
-                >
+                <v-text-field v-model="email" label="Email" variant="outlined" density="comfortable" class="mb-4"
+                  required></v-text-field>
+                <v-text-field v-model="password" label="Senha" type="password" variant="outlined" density="comfortable"
+                  class="mb-6" required></v-text-field>
+                <v-btn block color="primary" type="submit" size="large" class="text-none">
                   Entrar
                 </v-btn>
               </v-form>
@@ -38,20 +19,10 @@
           </v-card>
         </v-col>
       </v-row>
-      <v-snackbar
-        v-model="snackbar"
-        :color="snackbarColor"
-        :timeout="timeout"
-        location="top"
-      >
+      <v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="timeout" location="top">
         {{ snackbarMessage }}
         <template #action="{ attrs }">
-          <v-btn
-            variant="text"
-            v-bind="attrs"
-            @click="snackbar = false"
-            class="text-none"
-          >
+          <v-btn variant="text" v-bind="attrs" @click="snackbar = false" class="text-none">
             Fechar
           </v-btn>
         </template>
@@ -89,6 +60,10 @@ export default defineComponent({
         const response = await axios.post(`${enviroments.API}/auth/login`, {
           email: this.email,
           password: this.password
+        }, {
+          headers: {
+            'X-Use-Cookies': false
+          }
         })
 
         if (response.status !== 200) {
@@ -97,10 +72,8 @@ export default defineComponent({
           this.snackbar = true
           return
         }
-
-        localStorage.setItem('token', response.data.token)
-        localStorage.setItem('user', JSON.stringify(response.data.user))
-        
+        localStorage.setItem('token', response.data.data.token)
+        localStorage.setItem('user', JSON.stringify(response.data.data.user))
         this.$router.push('/home')
       } catch (error) {
         if (error.response && error.response?.status === 401) {
@@ -141,7 +114,8 @@ export default defineComponent({
   -webkit-app-region: no-drag;
 }
 
-.v-btn, .v-text-field {
+.v-btn,
+.v-text-field {
   -webkit-app-region: no-drag;
 }
 </style>
