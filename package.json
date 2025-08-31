@@ -25,7 +25,11 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@mdi/font": "^7.4.47",
     "axios": "^1.7.9",
+    "electron-printer": "^0.0.5",
     "electron-updater": "^6.3.9",
+    "escpos": "^3.0.0-alpha.6",
+    "laravel-echo": "^2.2.0",
+    "node-thermal-printer": "^4.5.0",
     "vite-plugin-vuetify": "^2.1.0",
     "vue-router": "^4.5.0",
     "vuetify": "^3.7.14"

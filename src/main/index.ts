@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain, Menu, Tray, nativeImage } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { getPrinters } from './printers' // Importa a função para obter impressoras
+import { getPrinters, print } from './printers'
 import menuTemplate from './config/menu.template'
 
 let mainWindow: BrowserWindow | null = null
@@ -9,13 +9,12 @@ let tray: Tray | null = null
 let isQuitting = false
 
 function createTray(): void {
-  // Create tray icon
   const icon = nativeImage.createFromPath(join(__dirname, '../../resources/icon.png'))
   tray = new Tray(icon.resize({ width: 16, height: 16 }))
-  
+
   const contextMenu = Menu.buildFromTemplate([
-    { 
-      label: 'Mostrar Aplicativo', 
+    {
+      label: 'Mostrar Aplicativo',
       click: () => {
         if (mainWindow) {
           mainWindow.show()
@@ -24,17 +23,17 @@ function createTray(): void {
       }
     },
     { type: 'separator' },
-    { 
-      label: 'Sair', 
+    {
+      label: 'Sair',
       click: () => {
         app.quit()
       }
     }
   ])
-  
+
   tray.setToolTip('Gerencer Desktop')
   tray.setContextMenu(contextMenu)
-  
+
   tray.on('click', () => {
     if (mainWindow) {
       if (mainWindow.isVisible()) {
@@ -52,12 +51,12 @@ function createWindow(): void {
     width: 400,
     height: 600,
     show: false,
-    autoHideMenuBar: true, // Keep this as true if you want to initially hide it
+    autoHideMenuBar: true,
     frame: false,
     transparent: false,
     resizable: false,
-    maximizable: false, // Impede maximização
-    fullscreenable: false, // Impede tela cheia
+    maximizable: false,
+    fullscreenable: false,
     ...(process.platform === 'linux' ? {} : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -65,7 +64,6 @@ function createWindow(): void {
     }
   })
 
-  // Handle window close event
   mainWindow.on('close', (event) => {
     if (!isQuitting) {
       event.preventDefault()
@@ -74,9 +72,6 @@ function createWindow(): void {
     }
     return true
   })
-
-  // Do NOT set the menu here initially.
-  // mainWindow.setMenu(menuTemplate);
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
@@ -98,13 +93,12 @@ function resizeToMainWindow(): void {
   if (mainWindow) {
     mainWindow.setSize(900, 670, true)
     mainWindow.setResizable(true)
-    mainWindow.setMaximizable(true) // Permite maximização após login
-    mainWindow.setFullScreenable(true) // Permite tela cheia após login
+    mainWindow.setMaximizable(true)
+    mainWindow.setFullScreenable(true)
     mainWindow.center()
-    console.log(menuTemplate)
     const menu = Menu.buildFromTemplate(menuTemplate);
     mainWindow.setMenu(menu);
-    mainWindow.setAutoHideMenuBar(false); // Show the menu bar
+    mainWindow.setAutoHideMenuBar(false);
   }
 }
 
@@ -115,8 +109,8 @@ function resizeToLoginWindow(): void {
     mainWindow.setMaximizable(false)
     mainWindow.setFullScreenable(false)
     mainWindow.center()
-    mainWindow.setMenu(null); // Remove the menu for the login screen
-    mainWindow.setAutoHideMenuBar(true); // Hide the menu bar
+    mainWindow.setMenu(null);
+    mainWindow.setAutoHideMenuBar(true);
   }
 }
 
@@ -132,14 +126,16 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('resize-window', () => {
-    console.log('Resizing to main window');
     resizeToMainWindow()
   })
 
-  // Handler para voltar ao modo de login
   ipcMain.handle('resize-to-login', () => {
     resizeToLoginWindow()
   })
+
+  ipcMain.handle('print-order', async (_, printContent) => {
+        await print(printContent);
+  });
 
   createWindow()
   createTray()
@@ -156,7 +152,6 @@ app.on('window-all-closed', () => {
   }
 })
 
-// Add before-quit handler
 app.on('before-quit', () => {
   isQuitting = true
 })

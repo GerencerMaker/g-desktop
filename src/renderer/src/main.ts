@@ -8,6 +8,42 @@ import '@mdi/font/css/materialdesignicons.css'
 
 import App from './App.vue'
 import router from './router/router'
+import '../../echo';
+let currentChannel: any = null;
+
+function initEchoListener(supplierId: number) {
+  if (currentChannel) {
+    currentChannel.stopListening('.order.printer');
+    (window as any).Echo.leaveChannel(currentChannel.name);
+    currentChannel = null;
+  }
+
+  currentChannel = (window as any).Echo.channel(`supplier.${supplierId}`);
+  currentChannel.listen('.order.printer', (event: any) => {
+    (window as any).electron.ipcRenderer.invoke('print-order', event.order);
+  });
+  console.log(currentChannel);
+}
+
+function removeEchoListener() {
+  if (currentChannel) {
+    currentChannel.stopListening('.order.printer');
+    (window as any).Echo.leaveChannel(currentChannel.name);
+    currentChannel = null;
+    console.log('Saiu do canal do supplier');
+  }
+}
+
+window.addEventListener('supplier:changed', (event: any) => {
+  if (event.detail) {
+    initEchoListener(event.detail.id);
+  } else {
+    removeEchoListener();
+  }
+});
+
+(window as any).initEchoListener = initEchoListener;
+(window as any).removeEchoListener = removeEchoListener
 
 const vuetify = createVuetify({
   components,

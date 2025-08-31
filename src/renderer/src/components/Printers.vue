@@ -14,6 +14,7 @@ export default defineComponent({
   mounted() {
     this.getPrinter();
     this.listPrinters();
+    (window).initEchoListener(JSON.parse(localStorage.getItem('supplier')).id);
   },
 
   methods: {
@@ -37,23 +38,37 @@ export default defineComponent({
     async listPrinters() {
       try {
         const printerList = await window.electron.ipcRenderer.invoke('list-printers')
-        this.systemPrinters = printerList.map((p) => ({
-          id: p.options['printer-uri-supported'],
-          name: p.name,
-          ip: p.options['printer-uri-supported'],
-          status: p.status,
-          default: p.options['printer-uri-supported'] === 'ipp://localhost/printers/IMPRESSORA'
-        }))
+        const platform = window.electron.process.platform
+
+        if (platform === 'linux') {
+          // fluxo original Linux
+          this.systemPrinters = printerList.map((p) => ({
+            id: p.options['printer-uri-supported'],
+            name: p.name,
+            ip: p.options['printer-uri-supported'],
+            status: p.status,
+            default: p.options['printer-uri-supported'] === 'ipp://localhost/printers/IMPRESSORA'
+          }))
+        } else if (platform.includes('win')) {
+          // fluxo adaptado Windows
+          this.systemPrinters = printerList.map((p) => ({
+            id: p.options?.system_driverinfo ?? p.name,
+            name: p.displayName || p.name,
+            ip: p.options?.['printer-location'] || '',
+            status: p.status,
+            default: p.isDefault
+          }))
+        }
       } catch (error) {
         console.error('Erro ao listar impressoras:', error)
       }
     },
+
     async submitPrinters() {
       if (!this.selectedPrinter) {
         alert('Selecione uma impressora!')
         return
       }
-
       const printer = this.systemPrinters.find(
         (p) => p.id === this.selectedPrinter
       )
@@ -85,6 +100,9 @@ export default defineComponent({
 <template>
   <v-container class="py-6 px-4" fluid>
     <h1 class="text-h5 text-center font-weight-medium mb-8">Seleção de Impressora</h1>
+    <v-btn icon @click="listPrinters">
+  <v-icon>mdi-reload</v-icon>
+</v-btn>
     <v-radio-group v-model="selectedPrinter" column class="max-width-800 mx-auto">
       <v-card
         v-for="systemPrinter in systemPrinters"
@@ -112,8 +130,9 @@ export default defineComponent({
               >
                 Padrão
               </v-chip>
-                            <v-chip
+              <v-chip
                 v-if="selectedPrinter === systemPrinter.id"
+                :disabled="!systemPrinter.ip"
                 size="small"
                 color="primary"
                 class="mt-2"

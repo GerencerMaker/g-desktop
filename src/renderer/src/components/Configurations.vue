@@ -1,5 +1,4 @@
 <template>
-  opa
   <v-btn color="red-accent-4" @click="logout">Sair</v-btn>
 </template>
 

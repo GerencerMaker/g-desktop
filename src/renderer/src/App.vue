@@ -1,5 +1,5 @@
 <script>
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 export default defineComponent({
@@ -11,7 +11,6 @@ export default defineComponent({
     const currentLayout = computed(() => {
       return route.path === '/login' ? 'div' : 'v-app'
     })
-
     return {
       currentLayout
     }
