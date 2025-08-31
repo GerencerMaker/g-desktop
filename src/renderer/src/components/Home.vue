@@ -20,6 +20,7 @@ export default defineComponent({
     async handleLogout() {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+      localStorage.removeItem('supplier')
 
       document.cookie.split(';').forEach(cookie => {
         const [name] = cookie.trim().split('=')
@@ -27,15 +28,14 @@ export default defineComponent({
       })
 
       await window.electron.ipcRenderer.invoke('resize-to-login')
+      window.dispatchEvent(new CustomEvent('supplier:changed', { detail: null}))
       this.$router.push('/login')
     },
-    // Changed the name from resizeWidth to reflect its purpose: resizing to main window
-    async resizeToMainWindow() { // Renamed for clarity
-      await window.electron.ipcRenderer.invoke('resize-window') // Call the 'resize-window' handler
+    async resizeToMainWindow() {
+      await window.electron.ipcRenderer.invoke('resize-window')
     }
   },
   mounted() {
-    // Call the method to resize the window when the component is mounted
     this.resizeToMainWindow()
   }
 })

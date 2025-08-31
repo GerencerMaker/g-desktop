@@ -72,8 +72,10 @@ export default defineComponent({
           this.snackbar = true
           return
         }
-        localStorage.setItem('token', response.data.data.token)
-        localStorage.setItem('user', JSON.stringify(response.data.data.user))
+        localStorage.setItem('token', response.data.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        localStorage.setItem('supplier', JSON.stringify(response.data.data.supplier));
+        window.dispatchEvent(new CustomEvent('supplier:changed', { detail: response.data.data.supplier }));
         this.$router.push('/home')
       } catch (error) {
         if (error.response && error.response?.status === 401) {
