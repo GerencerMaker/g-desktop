@@ -18,7 +18,7 @@ function initEchoListener(supplierId: number) {
     currentChannel = null;
   }
 
-  currentChannel = (window as any).Echo.channel(`supplier.${supplierId}`);
+  currentChannel = (window as any).Echo.channel(`printer_location-g-desktop.${supplierId}`);
   currentChannel.listen('.order.printer', (event: any) => {
     (window as any).electron.ipcRenderer.invoke('print-order', event.order);
   });
@@ -30,7 +30,6 @@ function removeEchoListener() {
     currentChannel.stopListening('.order.printer');
     (window as any).Echo.leaveChannel(currentChannel.name);
     currentChannel = null;
-    console.log('Saiu do canal do supplier');
   }
 }
 
